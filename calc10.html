@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vehicle Pricing Matrix</title>
+  <link rel="stylesheet" href="https://unpkg.com/98.css">
+  <style>
+    body {
+      background-color: #55aaaa; /* Classic 98 Teal background */
+      padding: 20px;
+      font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+    }
+    .window {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .window-body {
+      padding: 15px;
+    }
+    /* Vehicle Information Header Section */
+    .vehicle-info-fieldset {
+      margin-bottom: 15px;
+      padding: 10px;
+    }
+    .vehicle-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 12px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .field-group label {
+      font-size: 11px;
+      margin-bottom: 2px;
+      font-weight: bold;
+    }
+    .field-group input {
+      width: 100%;
+    }
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      color: #000;
+    }
+    .invoice-table th, .invoice-table td {
+      padding: 4px 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    .invoice-table th {
+      background: #dfdfdf;
+      font-weight: bold;
+      border-bottom: 2px solid #808080;
+    }
+    .section-header {
+      background-color: #ececec;
+      font-weight: bold;
+      padding: 6px 8px !important;
+      border-top: 1px solid #808080;
+      border-bottom: 1px solid #808080;
+    }
+    .line-num {
+      width: 45px;
+      color: #555;
+      font-size: 11px;
+    }
+    .description {
+      width: 55%;
+    }
+    .amount-col {
+      width: 30%;
+      text-align: right;
+    }
+    input[type="number"], input[type="text"] {
+      box-sizing: border-box;
+      padding: 2px 4px;
+    }
+    input[type="number"] {
+      text-align: right;
+    }
+    .price-input {
+      width: 120px;
+    }
+    .desc-input {
+      width: 85%;
+      font-family: inherit;
+    }
+    .rate-input {
+      width: 65px;
+      text-align: left;
+      margin: 0 4px;
+    }
+    .calculated-val {
+      font-weight: bold;
+      padding-right: 6px;
+      display: inline-block;
+      width: 120px;
+      text-align: right;
+    }
+    .tax-info {
+      font-size: 11px;
+      color: #444;
+      padding-left: 8px;
+      font-style: italic;
+    }
+    .currency-sign {
+      margin-right: 4px;
+    }
+    .action-row {
+      background: #dfdfdf;
+      padding: 6px 8px;
+    }
+    .delete-btn {
+      min-width: 20px !important;
+      height: 20px;
+      padding: 0 4px !important;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="window">
+  <div class="title-bar">
+    <div class="title-bar-text">Vehicle Pricing & Tax Recalculator.exe</div>
+    <div class="title-bar-controls">
+      <button aria-label="Minimize"></button>
+      <button aria-label="Maximize"></button>
+      <button aria-label="Close"></button>
+    </div>
+  </div>
+
+  <div class="window-body">
+
+    <!-- Vehicle Information Section -->
+    <fieldset class="vehicle-info-fieldset">
+      <legend>Vehicle Details</legend>
+      <div class="vehicle-info-grid">
+        <div class="field-group">
+          <label for="stock-num">Stock #:</label>
+          <input type="text" id="stock-num" placeholder="e.g. STK-10482">
+        </div>
+        <div class="field-group">
+          <label for="vin">VIN:</label>
+          <input type="text" id="vin" placeholder="17-character VIN" maxlength="17">
+        </div>
+        <div class="field-group">
+          <label for="make">Make:</label>
+          <input type="text" id="make" placeholder="e.g. Toyota">
+        </div>
+        <div class="field-group">
+          <label for="model">Model:</label>
+          <input type="text" id="model" placeholder="e.g. Camry">
+        </div>
+      </div>
+    </fieldset>
+
+    <table class="invoice-table">
+      <thead>
+        <tr>
+          <th class="line-num">Line</th>
+          <th class="description">Description</th>
+          <th class="amount-col">Amount ($)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="line-num">1.</td>
+          <td><strong>Vehicle Sales Price</strong></td>
+          <td class="amount-col">
+            <span class="currency-sign">$</span><input type="number" id="line1" class="price-input" value="0.00" step="0.01">
+          </td>
+        </tr>
+
+        <tr>
+          <td colspan="3" class="tax-info">
+            Taxes calculated on Taxable Amount: <span id="taxable-display">$0.00</span>
+            <span style="font-size:10px; color:#777;">(Sales Price + Fees + Products)</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="line-num">2.</td>
+          <td>STATE TAX Rate: <input type="number" id="state-rate" class="rate-input" value="6.0000" step="0.0001">%</td>
+          <td class="amount-col"><span class="currency-sign">$</span><span id="line2" class="calculated-val">0.00</span></td>
+        </tr>
+        <tr>
+          <td class="line-num">3.</td>
+          <td>COUNTY TAX Rate: <input type="number" id="county-rate" class="rate-input" value="1.5000" step="0.0001">% <span style="font-size:10px; color:#666;">(Cap: $<input type="number" id="county-cap" class="rate-input" value="75.00" step="0.01">)</span></td>
+          <td class="amount-col"><span class="currency-sign">$</span><span id="line3" class="calculated-val">0.00</span></td>
+        </tr>
+        <tr>
+          <td class="line-num">8.</td>
+          <td><strong>Total Taxes</strong></td>
+          <td class="amount-col"><span class="currency-sign">$</span><span id="line8" class="calculated-val">0.00</span></td>
+        </tr>
+        <tr>
+          <td class="line-num">9.</td>
+          <td><strong>Sales Price plus Total Taxes (1 + 8)</strong></td>
+          <td class="amount-col"><span class="currency-sign">$</span><span id="line9" class="calculated-val">0.00</span></td>
+        </tr>
+
+        <tr>
+          <td colspan="3" class="section-header">Title, License, Other Fees</td>
+        </tr>
+        <tr>
+          <td class="line-num">13.</td>
+          <td>Predelivery Service Fee</td>
+          <td class="amount-col"><span class="currency-sign">$</span><input type="number" id="line13" class="price-input" value="899.00" step="0.01"></td>
+        </tr>
+        <tr>
+          <td class="line-num">14.</td>
+          <td>Electronic Transfer Fee</td>
+          <td class="amount-col"><span class="currency-sign">$</span><input type="number" id="line14" class="price-input" value="150.00" step="0.01"></td>
+        </tr>
+        <tr>
+          <td class="line-num">15.</td>
+          <td>Certificate of Title Fee</td>
+          <td class="amount-col"><span class="currency-sign">$</span><input type="number" id="line15" class="price-input" value="80.00" step="0.01"></td>
+        </tr>
+        <tr>
+          <td class="line-num">16.</td>
+          <td>License and/or Registration Fee</td>
+          <td class="amount-col"><span class="currency-sign">$</span><input type="number" id="line16" class="price-input" value="120.00" step="0.01"></td>
+        </tr>
+        <tr>
+          <td class="line-num">22.</td>
+          <td><strong>Total Fees (13 through 16)</strong></td>
+          <td class="amount-col"><span class="currency-sign">$</span><span id="line22" class="calculated-val">0.00</span></td>
+        </tr>
+
+        <tr>
+          <td colspan="3" class="section-header">Additional Products</td>
+        </tr>
+        <tr>
+          <td class="line-num">30.</td>
+          <td>QUANTUM</td>
+          <td class="amount-col"><span class="currency-sign">$</span><input type="number" id="line30" class="price-input" value="895.00" step="0.01"></td>
+        </tr>
+
+        <tr id="dynamic-rows-anchor" style="display:none;"></tr>
+
+        <tr>
+          <td class="line-num">+</td>
+          <td colspan="2" class="action-row">
+            <button id="add-item-btn" type="button" style="padding: 2px 10px;">Add Custom Product</button>
+          </td>
+        </tr>
+
+        <tr>
+          <td class="line-num">31.</td>
+          <td><strong>Total Products</strong></td>
+          <td class="amount-col"><span class="currency-sign">$</span><span id="line31" class="calculated-val">0.00</span></td>
+        </tr>
+
+        <tr>
+          <td colspan="3" class="section-header">Final Calculation</td>
+        </tr>
+        <tr>
+          <td class="line-num">32.</td>
+          <td><strong>Total Amount Due (9 + 22 + 31)</strong></td>
+          <td class="amount-col"><span class="currency-sign">$</span><span id="line32" class="calculated-val">0.00</span></td>
+        </tr>
+        <tr>
+          <td class="line-num">37.</td>
+          <td>Cash Down Payment</td>
+          <td class="amount-col"><span class="currency-sign">$</span><input type="number" id="line37" class="price-input" value="0.00" step="0.01"></td>
+        </tr>
+        <tr style="background-color: #f4f4f4;">
+          <td class="line-num">43.</td>
+          <td><strong>Total Balance Due (32 - 37)</strong></td>
+          <td class="amount-col"><span class="currency-sign">$</span><span id="line43" class="calculated-val" style="color: #008080;">0.00</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  let customIndex = 0;
+  const alphabet = "abcdefghijklmnopqrstuvwxyz";
+
+  function getVal(id) {
+    const el = document.getElementById(id);
+    return el ? parseFloat(el.value) || 0 : 0;
+  }
+
+  function setTxt(id, val) {
+    document.getElementById(id).innerText = val.toFixed(2);
+  }
+
+  function setupSelectionEvent(inputElement) {
+    inputElement.addEventListener('focus', function() {
+      this.select();
+    });
+  }
+
+  function calculateInvoice() {
+    const line1_salesPrice = getVal('line1');
+    const line13_preDelivery = getVal('line13');
+    const line14_elecTrans = getVal('line14');
+    const line15_titleFee = getVal('line15');
+    const line16_regFee = getVal('line16');
+    const line30_quantum = getVal('line30');
+    const line37_downPayment = getVal('line37');
+
+    const stateTaxRate = getVal('state-rate') / 100;
+    const countyTaxRate = getVal('county-rate') / 100;
+    const countyTaxCap = getVal('county-cap');
+
+    let totalCustomProductsAmt = 0;
+    const customInputs = document.querySelectorAll('.custom-prod-amount');
+    customInputs.forEach(input => {
+      totalCustomProductsAmt += parseFloat(input.value) || 0;
+    });
+
+    const taxableAmount = line1_salesPrice + line13_preDelivery + line14_elecTrans + line30_quantum + totalCustomProductsAmt;
+    document.getElementById('taxable-display').innerText = "$" + taxableAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+    const line2_stateTax = taxableAmount * stateTaxRate;
+    setTxt('line2', line2_stateTax);
+
+    let line3_countyTax = taxableAmount * countyTaxRate;
+    if (countyTaxCap > 0 && line3_countyTax > countyTaxCap) {
+      line3_countyTax = countyTaxCap;
+    }
+    setTxt('line3', line3_countyTax);
+
+    const line8_totalTaxes = line2_stateTax + line3_countyTax;
+    setTxt('line8', line8_totalTaxes);
+
+    const line9_pricePlusTax = line1_salesPrice + line8_totalTaxes;
+    setTxt('line9', line9_pricePlusTax);
+
+    const line22_totalFees = line13_preDelivery + line14_elecTrans + line15_titleFee + line16_regFee;
+    setTxt('line22', line22_totalFees);
+
+    const line31_totalProducts = line30_quantum + totalCustomProductsAmt;
+    setTxt('line31', line31_totalProducts);
+
+    const line32_totalDue = line9_pricePlusTax + line22_totalFees + line31_totalProducts;
+    setTxt('line32', line32_totalDue);
+
+    const line43_balanceDue = line32_totalDue - line37_downPayment;
+
+    const balanceEl = document.getElementById('line43');
+    balanceEl.innerText = line43_balanceDue.toFixed(2);
+    balanceEl.style.color = "#008080";
+  }
+
+  document.getElementById('add-item-btn').addEventListener('click', function() {
+    const letterIndicator = alphabet[customIndex % alphabet.length] + (customIndex >= alphabet.length ? Math.floor(customIndex / alphabet.length) : "");
+    customIndex++;
+
+    const anchor = document.getElementById('dynamic-rows-anchor');
+    const row = document.createElement('tr');
+    row.id = `custom-row-${customIndex}`;
+
+    row.innerHTML = `
+      <td class="line-num">30${letterIndicator}.</td>
+      <td>
+        <input type="text" class="desc-input" value="Custom Product ${letterIndicator.toUpperCase()}" placeholder="Item Description">
+      </td>
+      <td class="amount-col">
+        <span class="currency-sign">$</span><input type="number" class="price-input custom-prod-amount" value="0.00" step="0.01"><button class="delete-btn" type="button" onclick="removeCustomRow('${row.id}')">X</button>
+      </td>
+    `;
+
+    anchor.parentNode.insertBefore(row, anchor);
+
+    const numInput = row.querySelector('.custom-prod-amount');
+    numInput.addEventListener('input', calculateInvoice);
+    setupSelectionEvent(numInput);
+
+    numInput.focus();
+    calculateInvoice();
+  });
+
+  window.removeCustomRow = function(rowId) {
+    const targetRow = document.getElementById(rowId);
+    if (targetRow) {
+      targetRow.remove();
+      calculateInvoice();
+    }
+  };
+
+  const inputs = document.querySelectorAll('input[type="number"]');
+  inputs.forEach(input => {
+    input.addEventListener('input', calculateInvoice);
+    setupSelectionEvent(input);
+  });
+
+  calculateInvoice();
+</script>
+
+</body>
+</html>
