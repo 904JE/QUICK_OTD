@@ -124,9 +124,8 @@
       margin-top: 15px;
       padding: 10px;
     }
-    .finance-fieldset legend label {
-      cursor: pointer;
-      font-weight: bold;
+    .finance-toggle-row {
+      margin-top: 15px;
     }
     .finance-fieldset select {
       width: 100%;
@@ -297,9 +296,12 @@
     </table>
 
     <!-- Finance Estimate Section -->
-    <fieldset class="finance-fieldset">
-      <legend><label><input type="checkbox" id="finance-toggle"> Finance Estimate</label></legend>
-      <div id="finance-body" style="display:none;">
+    <div class="finance-toggle-row">
+      <button id="finance-toggle-btn" type="button" style="padding: 2px 10px;">Show Finance Estimate</button>
+    </div>
+    <fieldset class="finance-fieldset" id="finance-fieldset" style="display:none; margin-top: 10px;">
+      <legend>Finance Estimate</legend>
+      <div id="finance-body">
         <div class="vehicle-info-grid">
           <div class="field-group">
             <label for="fin-term">Loan Term (months):</label>
@@ -422,8 +424,9 @@
 
     // Finance estimate: amount financed is the balance due (line 43),
     // which already subtracts the cash down payment (line 37).
-    const finToggle = document.getElementById('finance-toggle');
-    if (finToggle && finToggle.checked) {
+    // Only runs while the finance section is shown.
+    const finFieldset = document.getElementById('finance-fieldset');
+    if (finFieldset && finFieldset.style.display !== 'none') {
       const principal = Math.max(0, line43_balanceDue);
       const months = parseInt(document.getElementById('fin-term').value, 10) || 60;
       const apr = getVal('fin-apr');
@@ -484,8 +487,11 @@
     setupSelectionEvent(input);
   });
 
-  document.getElementById('finance-toggle').addEventListener('change', function() {
-    document.getElementById('finance-body').style.display = this.checked ? 'block' : 'none';
+  document.getElementById('finance-toggle-btn').addEventListener('click', function() {
+    const fs = document.getElementById('finance-fieldset');
+    const show = fs.style.display === 'none';
+    fs.style.display = show ? 'block' : 'none';
+    this.innerText = show ? 'Hide Finance Estimate' : 'Show Finance Estimate';
     calculateInvoice();
   });
   document.getElementById('fin-term').addEventListener('change', calculateInvoice);
