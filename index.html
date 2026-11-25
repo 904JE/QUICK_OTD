@@ -124,9 +124,6 @@
       margin-top: 15px;
       padding: 10px;
     }
-    .finance-toggle-row {
-      margin-top: 15px;
-    }
     .finance-fieldset select {
       width: 100%;
       box-sizing: border-box;
@@ -295,11 +292,8 @@
       </tbody>
     </table>
 
-    <!-- Finance Estimate Section -->
-    <div class="finance-toggle-row">
-      <button id="finance-toggle-btn" type="button" style="padding: 2px 10px;">Show Finance Estimate</button>
-    </div>
-    <fieldset class="finance-fieldset" id="finance-fieldset" style="display:none; margin-top: 10px;">
+    <!-- Finance Estimate Section: shows automatically when a down payment is entered -->
+    <fieldset class="finance-fieldset" id="finance-fieldset" style="display:none; margin-top: 15px;">
       <legend>Finance Estimate</legend>
       <div id="finance-body">
         <div class="vehicle-info-grid">
@@ -422,11 +416,15 @@
     balanceEl.innerText = line43_balanceDue.toFixed(2);
     balanceEl.style.color = "#008080";
 
-    // Finance estimate: amount financed is the balance due (line 43),
-    // which already subtracts the cash down payment (line 37).
-    // Only runs while the finance section is shown.
+    // Finance estimate: shows automatically when a down payment is entered.
+    // Amount financed is the balance due (line 43), which already
+    // subtracts the cash down payment (line 37).
     const finFieldset = document.getElementById('finance-fieldset');
-    if (finFieldset && finFieldset.style.display !== 'none') {
+    const showFinance = line37_downPayment > 0;
+    if (finFieldset) {
+      finFieldset.style.display = showFinance ? 'block' : 'none';
+    }
+    if (showFinance) {
       const principal = Math.max(0, line43_balanceDue);
       const months = parseInt(document.getElementById('fin-term').value, 10) || 60;
       const apr = getVal('fin-apr');
@@ -487,13 +485,6 @@
     setupSelectionEvent(input);
   });
 
-  document.getElementById('finance-toggle-btn').addEventListener('click', function() {
-    const fs = document.getElementById('finance-fieldset');
-    const show = fs.style.display === 'none';
-    fs.style.display = show ? 'block' : 'none';
-    this.innerText = show ? 'Hide Finance Estimate' : 'Show Finance Estimate';
-    calculateInvoice();
-  });
   document.getElementById('fin-term').addEventListener('change', calculateInvoice);
 
   calculateInvoice();
